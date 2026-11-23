@@ -444,9 +444,10 @@
                     <option value="TikTok PayLater">TikTok PayLater (2115)</option>
                   </select>
                 </div>
-                <div class="grid grid-cols-3 gap-2.5">
-                  <input id="bnplTotal" type="number" step="0.01" placeholder="ยอดซื้อรวม (฿)" required class="bg-[#1A3525] border border-[#E8DCC4]/25 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none" />
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <input id="bnplTotal" type="number" step="0.01" placeholder="เงินต้นรวม (฿)" required class="bg-[#1A3525] border border-[#E8DCC4]/25 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none" />
                   <input id="bnplTenor" type="number" min="1" max="60" placeholder="จำนวนงวด" required class="bg-[#1A3525] border border-[#E8DCC4]/25 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none" />
+                  <input id="bnplInterest" type="number" step="0.01" min="0" value="0" placeholder="ดอกเบี้ย/งวด (฿)" class="bg-[#1A3525] border border-[#E8DCC4]/25 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none" />
                   <input id="bnplPaid" type="number" min="0" value="0" placeholder="ผ่อนแล้ว (งวด)" class="bg-[#1A3525] border border-[#E8DCC4]/25 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none" />
                 </div>
                 <div class="flex justify-end gap-2">
@@ -4180,16 +4181,21 @@
         ? (rem >= 0 ? `เหลือเฉลี่ย ${fmtTHB(rem / 7)} / วัน (อีก 7 วัน)` : `ใช้เกินงบรวม ${fmtTHB(Math.abs(rem))}`)
         : 'กรอกงบประมาณรายหมวดเพื่อคำนวณยอดคงเหลือต่อวัน';
 
-      // BNPL List
+      // BNPL List (Principal + Interest split)
       const activeBnpl = state.installments.filter(x => x.status === 'กำลังผ่อนชำระ');
-      const monthlySum = activeBnpl.reduce((s, x) => s + Number(x.perMonth || 0), 0);
+      const monthlySum = activeBnpl.reduce((s, x) => s + Number(x.perMonth || 0) + Number(x.interestPerMonth || 0), 0);
+      const totalRemInterest = activeBnpl.reduce((s, x) => s + Math.max(0, (x.tenor || 0) - (x.paid || 0)) * Number(x.interestPerMonth || 0), 0);
       document.getElementById('bnplMonthlySum').textContent = fmtTHB(monthlySum);
-      document.getElementById('bnplActiveCount').textContent = `${activeBnpl.length} รายการที่กำลังผ่อน`;
+      document.getElementById('bnplActiveCount').textContent = `${activeBnpl.length} รายการ · ดอกเบี้ยคงเหลือ ${fmtTHB(totalRemInterest)}`;
 
       const bnplEl = document.getElementById('bnplList');
       bnplEl.innerHTML = state.installments.map((ins, idx) => {
+        const principalM = Number(ins.perMonth || 0);
+        const interestM = Number(ins.interestPerMonth || 0);
+        const totalM = Number((principalM + interestM).toFixed(2));
         const remTenor = Math.max(0, (ins.tenor || 0) - (ins.paid || 0));
-        const remBal = remTenor * (ins.perMonth || 0);
+        const remPrincipal = remTenor * principalM;
+        const remInterest = remTenor * interestM;
         const done = ins.status === 'ผ่อนชำระครบแล้ว' || (ins.tenor > 0 && remTenor === 0);
         return `
           <div class="p-3 rounded-xl bg-[#14281C]/60 border border-[#E8DCC4]/15 flex flex-wrap items-center justify-between gap-3">
@@ -4198,11 +4204,11 @@
                 <span class="text-[10.5px] font-mono font-bold text-[#E8DCC4]">${ins.id}</span>
                 <span class="text-xs font-bold text-white truncate">${ins.item}</span>
               </div>
-              <div class="text-[11px] text-[#C2B59B] mt-0.5">${ins.provider} · ${ins.plan || (ins.tenor + ' งวด')} · ผ่อนแล้ว ${ins.paid}/${ins.tenor} งวด</div>
+              <div class="text-[11px] text-[#C2B59B] mt-0.5">${ins.provider} · ผ่อนแล้ว ${ins.paid}/${ins.tenor} งวด · ต้น ${fmtTHB(principalM)} ${interestM > 0 ? '+ ดอก ' + fmtTHB(interestM) : '(0%)'}</div>
             </div>
             <div class="text-right tabular-nums">
-              <div class="text-xs font-bold text-white">${fmtTHB(ins.perMonth)} / เดือน</div>
-              <div class="text-[10.5px] text-[#C2B59B]">คงเหลือ ${fmtTHB(remBal)}</div>
+              <div class="text-xs font-bold text-white">${fmtTHB(totalM)} / เดือน</div>
+              <div class="text-[10.5px] text-[#C2B59B]">ต้นคงค้าง ${fmtTHB(remPrincipal)}${remInterest > 0 ? ' · ดอก ' + fmtTHB(remInterest) : ''}</div>
             </div>
             <div>
               ${done
@@ -4218,21 +4224,24 @@
         btn.addEventListener('click', () => {
           const idx = Number(btn.dataset.payBnpl);
           const ins = state.installments[idx];
-          if (!ins.perMonth || ins.perMonth <= 0) {
-            showToast('รายการนี้ยังไม่ได้ระบุค่างวด/เดือน กรุณากด "+ เพิ่มผ่อน" เพื่อใส่ยอดจริง');
+          const principalM = Number(ins.perMonth || 0);
+          const interestM = Number(ins.interestPerMonth || 0);
+          const totalM = Number((principalM + interestM).toFixed(2));
+          if (totalM <= 0) {
+            showToast('รายการนี้ยังไม่ได้ระบุเงินต้น/งวด กรุณากด "+ เพิ่มผ่อน" เพื่อใส่ยอดจริง');
             return;
           }
           ins.paid = (ins.paid || 0) + 1;
           if (ins.tenor > 0 && ins.paid >= ins.tenor) ins.status = 'ผ่อนชำระครบแล้ว';
-          const debtCode = ins.provider.includes('CardX') ? 2111 : 2114;
-          const lines = [
-            { code: debtCode, name: getAccount(debtCode).name, dr: ins.perMonth, cr: 0 },
-            { code: 1121, name: getAccount(1121).name, dr: 0, cr: ins.perMonth }
-          ];
-          const jvId = createNewJv('2026-11-23', `ชำระค่างวด ${ins.id} (${ins.item}) งวดที่ ${ins.paid}`, lines);
-          pushToAppsScript('payInstallment', { id: ins.id, amount: ins.perMonth, debtCode, bankCode: 1121 });
+          const debtCode = ins.debtCode || (ins.provider.includes('CardX') ? 2111 : (ins.provider.includes('First') ? 2112 : (ins.provider.includes('TikTok') ? 2115 : 2114)));
+          const lines = [{ code: debtCode, name: getAccount(debtCode).name, dr: principalM, cr: 0 }];
+          if (interestM > 0) lines.push({ code: 5160, name: getAccount(5160).name, dr: interestM, cr: 0 });
+          lines.push({ code: 1121, name: getAccount(1121).name, dr: 0, cr: totalM });
+          const desc = `ชำระค่างวด ${ins.id} (${ins.item}) งวดที่ ${ins.paid}` + (interestM > 0 ? ` [ต้น ${principalM} + ดอก ${interestM}]` : ' [0%]');
+          const jvId = createNewJv('2026-11-24', desc, lines);
+          pushToAppsScript('payInstallment', { id: ins.id, principal: principalM, interest: interestM, debtCode, bankCode: 1121 });
           renderAll();
-          showToast(`ตัดงวด ${ins.id} และสร้างบัญชีคู่ ${jvId} (${fmtTHB(ins.perMonth)}) แล้ว`);
+          showToast(`ตัดงวด ${ins.id} และสร้างบัญชีคู่ ${jvId} (${fmtTHB(totalM)}) แล้ว`);
         });
       });
     }
@@ -4799,13 +4808,17 @@
       const provider = document.getElementById('bnplProvider').value;
       const total = parseFloat(document.getElementById('bnplTotal').value) || 0;
       const tenor = parseInt(document.getElementById('bnplTenor').value, 10) || 1;
+      const interestPerMonth = parseFloat(document.getElementById('bnplInterest').value) || 0;
       const paid = parseInt(document.getElementById('bnplPaid').value, 10) || 0;
+      const debtCode = provider.includes('CardX') ? 2111 : (provider.includes('First') ? 2112 : (provider.includes('TikTok') ? 2115 : 2114));
       const id = 'INS-' + String(state.installments.length + 1).padStart(3, '0');
-      state.installments.unshift({
-        id, item, provider, plan: `ผ่อน ${tenor} เดือน`, startDate: '2026-11-23',
-        total, tenor, paid, perMonth: Number((total / tenor).toFixed(2)), dueDay: 'ทุกสิ้นเดือน',
-        status: paid >= tenor ? 'ผ่อนชำระครบแล้ว' : 'กำลังผ่อนชำระ'
-      });
+      const newRec = {
+        id, item, provider, debtCode, plan: interestPerMonth > 0 ? `ผ่อน ${tenor} เดือน (มีดอกเบี้ย)` : `ผ่อน 0% ${tenor} เดือน`,
+        startDate: '2026-11-24', total, tenor, paid, perMonth: Number((total / tenor).toFixed(2)),
+        interestPerMonth, dueDay: 'ทุกสิ้นเดือน', status: paid >= tenor ? 'ผ่อนชำระครบแล้ว' : 'กำลังผ่อนชำระ'
+      };
+      state.installments.unshift(newRec);
+      pushToAppsScript('addInstallment', newRec);
       document.getElementById('addBnplForm').reset();
       document.getElementById('addBnplForm').classList.add('hidden');
       renderBudgetAndBnpl();
