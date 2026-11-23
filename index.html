@@ -161,15 +161,19 @@
           <div id="syncStatusLabel" class="text-[10.5px] text-[#C2B59B] mt-1">โหมดข้อมูลชีตล่าสุด (Local)</div>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <button id="openSyncBtn" class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11.5px] font-semibold text-[#E8DCC4] bg-[#162D1F] hover:bg-[#162D1F] border border-[#E8DCC4]/25 transition cursor-pointer">
+          <button id="openSyncBtn" class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11.5px] font-semibold text-[#E8DCC4] bg-[#162D1F] hover:bg-[#274A35] border border-[#E8DCC4]/25 transition cursor-pointer">
             <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
             <span>ซิงก์ชีต</span>
           </button>
-          <button id="exportJsonBtn" class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11.5px] font-semibold text-[#E8DCC4]/90 bg-[#162D1F] hover:bg-[#162D1F] border border-[#E8DCC4]/25/70 transition cursor-pointer">
-            <i data-lucide="download" class="w-3.5 h-3.5 text-[#E8DCC4]"></i>
-            <span>Backup</span>
+          <button id="refreshSheetBtn" class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11.5px] font-semibold text-white bg-[#8B5CF6] hover:brightness-110 transition cursor-pointer">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>ดึงยอดจริง</span>
           </button>
         </div>
+        <button id="exportJsonBtn" class="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-[11px] font-semibold text-[#C2B59B] bg-[#14281C] hover:bg-[#274A35] border border-[#E8DCC4]/15 transition cursor-pointer">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-[#E8DCC4]"></i>
+          <span>ส่งออก JSON Backup</span>
+        </button>
       </div>
     </aside>
 
@@ -3839,6 +3843,45 @@
       state.auditLogs.unshift({ ts, action, ref, detail });
     }
 
+    function applySnapshot(data) {
+      if (!data) return;
+      if (data.summary) Object.assign(state.summary, data.summary);
+      if (Array.isArray(data.accounts) && data.accounts.length) state.accounts = data.accounts;
+      if (Array.isArray(data.journals) && data.journals.length) state.journals = data.journals;
+      if (Array.isArray(data.monthly) && data.monthly.length) state.monthly = data.monthly;
+      if (Array.isArray(data.cashflow) && data.cashflow.length) state.cashflow = data.cashflow;
+      if (Array.isArray(data.holdings) && data.holdings.length) state.holdings = data.holdings;
+      if (data.portfolioMeta) Object.assign(state.portfolioMeta, data.portfolioMeta);
+      if (Array.isArray(data.trades) && data.trades.length) state.trades = data.trades;
+      if (Array.isArray(data.budgets) && data.budgets.length) state.budgets = data.budgets;
+      if (data.novActualByCode) state.novActualByCode = data.novActualByCode;
+      if (Array.isArray(data.installments) && data.installments.length) state.installments = data.installments;
+      if (Array.isArray(data.auditLogs) && data.auditLogs.length) state.auditLogs = data.auditLogs;
+      renderAll();
+    }
+
+    async function pullFromAppsScript(silent = false) {
+      if (!state.syncConfig.url || !state.syncConfig.url.startsWith('https://script.google.com/')) {
+        if (!silent) showToast('กรุณากด "ซิงก์ชีต" เพื่อใส่ Web App URL ก่อนดึงข้อมูลจริง');
+        return;
+      }
+      try {
+        if (!silent) showToast('กำลังดึงข้อมูลล่าสุดจาก Google Sheets...');
+        const sep = state.syncConfig.url.includes('?') ? '&' : '?';
+        const url = `${state.syncConfig.url}${sep}action=snapshot&token=${encodeURIComponent(state.syncConfig.token || '')}`;
+        const res = await fetch(url);
+        const j = await res.json();
+        if (j.ok && j.data) {
+          applySnapshot(j.data);
+          if (!silent) showToast(`ดึงข้อมูลจริงจากชีตสำเร็จ (${(j.data.journals || []).length} รายการบัญชีคู่)`);
+        } else if (!silent) {
+          showToast('ดึงข้อมูลไม่สำเร็จ: ' + (j.error || 'ตรวจสอบ Token'));
+        }
+      } catch (err) {
+        if (!silent) showToast('เชื่อมต่อ Apps Script ไม่ได้ในขณะนี้');
+      }
+    }
+
     async function pushToAppsScript(action, payload) {
       if (!state.syncConfig.url || !state.syncConfig.url.startsWith('https://script.google.com/')) return;
       try {
@@ -3849,7 +3892,10 @@
         });
         const j = await res.json();
         if (!j.ok) showToast('ซิงก์ชีตไม่สำเร็จ: ' + (j.error || 'Unknown'));
-        else showToast('ซิงก์ลง Google Sheets สำเร็จ');
+        else {
+          if (j.data) applySnapshot(j.data);
+          showToast('ซิงก์ลง Google Sheets สำเร็จ');
+        }
       } catch (err) {
         showToast('บันทึกในหน้าเว็บแล้ว (เชื่อมต่อ Apps Script ไม่ได้)');
       }
@@ -4939,8 +4985,10 @@
       try { localStorage.setItem('allgrand_sync_cfg', JSON.stringify(state.syncConfig)); } catch (_) {}
       syncModal.classList.add('hidden'); syncModal.classList.remove('flex');
       renderAll();
-      showToast(state.syncConfig.url ? 'บันทึกการเชื่อมต่อ Apps Script แล้ว' : 'เปลี่ยนเป็นโหมด Local แล้ว');
+      if (state.syncConfig.url) pullFromAppsScript(false);
+      else showToast('เปลี่ยนเป็นโหมด Local แล้ว');
     });
+    document.getElementById('refreshSheetBtn').addEventListener('click', () => pullFromAppsScript(false));
     document.getElementById('clearSyncBtn').addEventListener('click', () => {
       state.syncConfig = { url: '', token: '' };
       try { localStorage.removeItem('allgrand_sync_cfg'); } catch (_) {}
@@ -4960,7 +5008,7 @@
       showToast('ส่งออกไฟล์ JSON Backup เรียบร้อยแล้ว');
     });
 
-    window.addEventListener('DOMContentLoaded', () => { renderAll(); });
+    window.addEventListener('DOMContentLoaded', () => { renderAll(); if (state.syncConfig.url) pullFromAppsScript(true); });
   </script>
 </body>
 </html>
