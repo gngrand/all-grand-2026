@@ -495,9 +495,12 @@
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
                 <h3 class="text-sm font-bold text-white">พอร์ตหุ้นสหรัฐฯ รายหลักทรัพย์ (ALL GRAND G01 · FIFO)</h3>
-                <p class="text-[11px] text-[#C2B59B]">Dime! US Equities · อัปเดตอัตโนมัติเมื่อบันทึกซื้อ/ขายหุ้น</p>
+                <p class="text-[11px] text-[#C2B59B]">Dime! US Equities · ซิงก์ราคาจาก Google Finance ทุก 60 วิ <span id="portfolioSyncTime" class="text-[#34D399] ml-1"></span></p>
               </div>
-              <button id="openTradeModalBtn2" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] hover:brightness-110 cursor-pointer">+ บันทึกซื้อ/ขายหุ้น</button>
+              <div class="flex items-center gap-2">
+                <button id="refreshPortfolioBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#E8DCC4] bg-[#14281C] border border-[#E8DCC4]/25 hover:bg-[#1C3827] cursor-pointer">↻ รีเฟรชราคา</button>
+                <button id="openTradeModalBtn2" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] hover:brightness-110 cursor-pointer">+ บันทึกซื้อ/ขายหุ้น</button>
+              </div>
             </div>
             <table class="w-full text-left border-collapse min-w-[680px]">
               <thead>
@@ -1612,81 +1615,81 @@
     {
       "ticker": "GOOGL",
       "name": "Alphabet Inc Class A",
-      "shares": 1.13852,
-      "avgCost": 294.24,
-      "costUsd": 335.0,
-      "price": 265.29,
-      "chg1d": -2.7,
-      "mktUsd": 302.04,
-      "pnlUsd": -32.96,
-      "pnlThb": -1121.52,
-      "retPct": -9.84,
-      "weight": 41.36
+      "shares": 1.1385197,
+      "avgCost": 294.2439,
+      "costUsd": 335.0025,
+      "price": 284.75,
+      "chg1d": 7.34,
+      "pnlThb": -367.19,
+      "mktUsd": 324.19,
+      "pnlUsd": -10.81,
+      "retPct": -3.23,
+      "weight": 39.19
     },
     {
       "ticker": "MU",
       "name": "Micron Technology Inc",
-      "shares": 0.336923,
-      "avgCost": 367.73,
-      "costUsd": 123.9,
-      "price": 594.51,
-      "chg1d": -13.89,
-      "mktUsd": 200.3,
-      "pnlUsd": 76.41,
-      "pnlThb": 2599.53,
-      "retPct": 61.67,
-      "weight": 27.43
+      "shares": 0.3369229,
+      "avgCost": 367.7298,
+      "costUsd": 123.8966,
+      "price": 704.12,
+      "chg1d": 18.44,
+      "pnlThb": 3850.13,
+      "mktUsd": 237.23,
+      "pnlUsd": 113.34,
+      "retPct": 91.48,
+      "weight": 28.68
     },
     {
       "ticker": "CRDO",
       "name": "Credo Technology Group Holding Ltd",
-      "shares": 1.168885,
-      "avgCost": 155.33,
-      "costUsd": 181.57,
-      "price": 99.86,
-      "chg1d": -15.2,
-      "mktUsd": 116.72,
-      "pnlUsd": -64.84,
-      "pnlThb": -2206.11,
-      "retPct": -35.71,
-      "weight": 15.98
+      "shares": 1.1688852,
+      "avgCost": 155.3347,
+      "costUsd": 181.5685,
+      "price": 120.92,
+      "chg1d": 21.09,
+      "pnlThb": -1366.53,
+      "mktUsd": 141.34,
+      "pnlUsd": -40.23,
+      "retPct": -22.16,
+      "weight": 17.09
     },
     {
       "ticker": "FPS",
       "name": "Forgent Power Solutions, Inc",
-      "shares": 6.009905,
-      "avgCost": 26.71,
-      "costUsd": 160.54,
-      "price": 18.0,
-      "chg1d": -14.12,
-      "mktUsd": 108.18,
-      "pnlUsd": -52.36,
-      "pnlThb": -1781.37,
-      "retPct": -32.61,
-      "weight": 14.81
+      "shares": 6.0099045,
+      "avgCost": 26.7122,
+      "costUsd": 160.5376,
+      "price": 20.15,
+      "chg1d": 11.94,
+      "pnlThb": -1339.73,
+      "mktUsd": 121.1,
+      "pnlUsd": -39.44,
+      "retPct": -24.57,
+      "weight": 14.64
     },
     {
       "ticker": "EOSE",
       "name": "Eos Energy Enterprises Inc",
-      "shares": 2.59596,
-      "avgCost": 2.47,
-      "costUsd": 6.42,
-      "price": 1.19,
-      "chg1d": -12.5,
-      "mktUsd": 3.09,
-      "pnlUsd": -3.33,
-      "pnlThb": -113.39,
-      "retPct": -51.9,
-      "weight": 0.42
+      "shares": 2.5959595,
+      "avgCost": 2.4739,
+      "costUsd": 6.422,
+      "price": 1.26,
+      "chg1d": 5.88,
+      "pnlThb": -107.04,
+      "mktUsd": 3.27,
+      "pnlUsd": -3.15,
+      "retPct": -49.07,
+      "weight": 0.4
     }
   ],
   "portfolioMeta": {
-    "totalThb": 24847.31,
+    "totalThb": 28098.23,
     "cashThb": 0.16,
     "cashUsd": -0.0082,
-    "unrealizedUsd": -77.09,
+    "unrealizedUsd": 19.71,
     "realizedUsd": -33.59,
-    "fxRate": 34.022,
+    "fxRate": 33.9705,
     "goldName": "แหวนทองคำแท้ 96.5% (2 สลึง)",
     "goldWeightBaht": 0.5,
     "goldPricePerBaht": 67650.0,
@@ -3851,7 +3854,19 @@
       if (Array.isArray(data.journals) && data.journals.length) state.journals = data.journals;
       if (Array.isArray(data.monthly) && data.monthly.length) state.monthly = data.monthly;
       if (Array.isArray(data.cashflow) && data.cashflow.length) state.cashflow = data.cashflow;
-      if (Array.isArray(data.holdings) && data.holdings.length) state.holdings = data.holdings;
+      if (Array.isArray(data.holdings) && data.holdings.length) {
+        const prevMap = Object.fromEntries((state.holdings || []).map(x => [x.ticker, x]));
+        state.holdings = data.holdings.map(h => {
+          const prev = prevMap[h.ticker] || {};
+          const price = Number(h.price) > 0 ? Number(h.price) : Number(prev.price || 0);
+          const shares = Number(h.shares) || Number(prev.shares || 0);
+          const costUsd = Number(h.costUsd) || Number(prev.costUsd || 0);
+          const mktUsd = Number(h.mktUsd) > 0 ? Number(h.mktUsd) : Number((shares * price).toFixed(2));
+          const pnlUsd = (Number.isFinite(Number(h.pnlUsd)) && Number(h.price) > 0) ? Number(h.pnlUsd) : Number((mktUsd - costUsd).toFixed(2));
+          const retPct = (Number.isFinite(Number(h.retPct)) && Number(h.price) > 0) ? Number(h.retPct) : (costUsd > 0 ? Number(((pnlUsd / costUsd) * 100).toFixed(2)) : 0);
+          return { ...prev, ...h, shares, avgCost: Number(h.avgCost) || Number(prev.avgCost || 0), costUsd, price, mktUsd, pnlUsd, retPct };
+        });
+      }
       if (data.portfolioMeta) Object.assign(state.portfolioMeta, data.portfolioMeta);
       if (Array.isArray(data.trades) && data.trades.length) state.trades = data.trades;
       if (Array.isArray(data.budgets) && data.budgets.length) state.budgets = data.budgets;
@@ -3876,8 +3891,10 @@
           applySnapshot(j.data);
           const nowT = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           document.getElementById('syncStatusLabel').textContent = `ซิงก์ล่าสุด ${nowT}`;
-          if (!Array.isArray(j.data.budgets) || !Array.isArray(j.data.journals)) {
-            showToast('⚠️ Apps Script ยังเป็นเวอร์ชันเก่า กรุณา Deploy เป็น "เวอร์ชันใหม่"');
+          const pst = document.getElementById('portfolioSyncTime');
+          if (pst) pst.textContent = `• อัปเดต ${nowT}`;
+          if (!Array.isArray(j.data.budgets) || !Array.isArray(j.data.journals) || !Array.isArray(j.data.holdings)) {
+            showToast('⚠️ Apps Script ยังเป็นเวอร์ชันเก่า (ยังไม่ส่งราคาพอร์ต/งบ/บัญชีคู่) กรุณา Deploy เป็น "เวอร์ชันใหม่"');
           } else if (!silent) {
             showToast(`ดึงข้อมูลจริงสำเร็จ (${j.data.journals.length} บัญชีคู่ · งบ ${j.data.budgets.length} หมวด)`);
           }
@@ -5031,9 +5048,13 @@
       renderAll();
       if (state.syncConfig.url) pullFromAppsScript(true);
     });
+    document.getElementById('refreshPortfolioBtn')?.addEventListener('click', () => pullFromAppsScript(false));
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && state.syncConfig.url) pullFromAppsScript(true);
     });
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && state.syncConfig.url) pullFromAppsScript(true);
+    }, 60000);
   </script>
 </body>
 </html>
